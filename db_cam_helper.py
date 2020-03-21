@@ -114,11 +114,11 @@ inference_model = {
 	"model_id" : model_id,
 	"model_vrsn_number" : 1,
 	"model_name" : "PPE Detect",
-	# "model_path" : os.path.abspath(sys.argv[0]),
+	"model_path" : os.path.abspath(sys.argv[0]),
 	"backbone_name" : "yolo v3",
 	"model_weight_format" : ".pb, .h5",
 	"model_config_name" : "config.json",
-	# "model_config_path" : os.path.abspath(model_config_name),
+	"model_config_path" : os.path.abspath(model_config_name),
 	"model_preprocess_input_dhape" : "416, 416",
 	"model_framework" : "tf",
 	"created_by" : 11,
@@ -128,9 +128,9 @@ inference_model = {
 }
 
 creds = {
-	"usr" : "postgres", 
-	"psk" : "@con2VA", 
-	"dbn" : "CerebraVA_Forge", 
-	"ipp" : "40.86.100.25:5432" # to be replaced with env variables
+	"usr" : os.environ["db_usr"], 
+	"psk" : os.environ["db_psk"], 
+	"dbn" : os.environ["db_name"], 
+	"ipp" : os.environ["db_ipp"] # to be replaced with env variables
 }
 
