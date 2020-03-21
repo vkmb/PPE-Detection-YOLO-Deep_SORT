@@ -1,23 +1,26 @@
 #! /usr/bin/env python
 
 import os
-import argparse
-import json
 import cv2
-import tensorflow as tf
-from utils.utils import get_yolo_boxes, makedirs
-from utils.bbox import draw_boxes
-from tensorflow.keras.models import load_model
-from tqdm import tqdm
+import time
+import copy
+import json
+import argparse
 import numpy as np
-from object_tracking.application_util import preprocessing
-from object_tracking.deep_sort import nn_matching
-from object_tracking.deep_sort.detection import Detection
-from object_tracking.deep_sort.tracker import Tracker
-from object_tracking.application_util import generate_detections as gdet
+from tqdm import tqdm
+import tensorflow as tf
+from db_cam_helper import *
+from utils.bbox import draw_boxes
 from utils.bbox import draw_box_with_id
+from datetime import datetime, timedelta
+from tensorflow.keras.models import load_model
+from utils.utils import get_yolo_boxes, makedirs
+from object_tracking.deep_sort import nn_matching
+from object_tracking.deep_sort.tracker import Tracker
+from object_tracking.deep_sort.detection import Detection
+from object_tracking.application_util import preprocessing
+from object_tracking.application_util import generate_detections as gdet
 
-import warnings
 warnings.filterwarnings("ignore")
 
 from tensorflow.compat.v1 import ConfigProto
@@ -28,14 +31,28 @@ config.gpu_options.allow_growth = True
 tf.keras.backend.set_session(tf.Session(config=config))
 
 def _main_(args):
+    ip = False
     config_path = args.conf
     num_cam = int(args.count)
+    ip_address = args.ipadress.split("-")
+    ip_list = []
+    engine = generate_db_engine()
+    label_loader(engine, label_dict, label_template)
+    inference_engine_loader(engine, inference_engine_dict, 1)
+    for ip_up in ip_address:
+       user_psk, ip = ip_up.split("@")
+       user, psk = user_psk.split(":")
+       ip_list.append({"ip": ip,"user": user, "psk": psk})
 
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
 
-    # makedirs(output_path)
-
+    if num_cam == None and len(ip_list) == 0:
+        ip = True
+        num_cam = len(ip_list)
+    else:
+        print("No image sources found")
+        exit()
     ###############################
     #   Set some parameter
     ###############################
@@ -75,16 +92,25 @@ def _main_(args):
     ###############################
     # if 'webcam' in input_path:  # do detection on the first webcam
     video_readers = []
+    violation_trackers = []
+            
     for i in range(num_cam):
-        video_reader = cv2.VideoCapture(i)
+        if not ip:
+            video_reader = cv2.VideoCapture(i)
+        else:
+            connection_string = get_camera_stream_uri(ip_list[i]["ip"], user=ip_dict[i]["user"], psk=ip_dict[i]["psk"])
+            video_reader = cv2.VideoCapture(connection_string)
         video_readers.append(video_reader)
+        violation_trackers.append({"violation":False, "start_time":None, "end_time":None})
 
     # the main loop
     batch_size = num_cam
+    current_time = []
     images = []
     while True:
         for i in range(num_cam):
             ret_val, image = video_readers[i].read()
+            current_time.append(datetime.now())
             if ret_val == True: images += [image]
 
         if (len(images) == batch_size) or (ret_val == False and len(images) > 0):
@@ -109,14 +135,62 @@ def _main_(args):
 
                 n_without_helmet = 0
                 n_with_helmet = 0
-
                 for track in trackers[i].tracks:
                     if not track.is_confirmed() or track.time_since_update > 1:
                         continue
                     if track.label == 2:
                         n_without_helmet += 1
+
                     if track.label == 1:
                         n_with_helmet += 1
+
+                    if n_without_helmet > 0:
+                        if violation_trackers[i]["violation"] == False:
+                            violation_trackers[i]["violation"] = True
+                            violation_trackers[i]["Start_time"] = current_time[i]
+                            filename = f"CAM {i} {current_time[i].strftime("%d-%m-%Y %I:%M:%S %p")}.jpg"
+                            data_dict = {}
+                            data_dict["video_id"] = -1
+                            data_dict["inference_engine_id"] = model_id
+                            data_dict["operating_unit_id"] = int("".join(ip_list[i][ip].split(".")))
+                            data_dict["frame_id"] = filename
+                            data_dict["label_id"] = label_dict["VLO"][list(seq_dict["VLO"].keys())[0]]
+                            data_dict["event_processed_time_zone"] = "IST"
+                            data_dict["event_processed_local_time"] = str(current_time[i])
+                            data_dict["event_flag"] = 1
+                            data_dict["created_date"] = str(current_time[i])
+                            data_dict["created_by"] = model_id
+                            data_dict["current_flag"] = current_flag
+                            data_dict["active_flag"] = active_flag
+                            data_dict["delete_flag"] = delete_flag
+                            cv2.imwrite("filename", images[i])
+                            event_log_dtl_writer(engine, data_dict)
+                            # call db log
+                    if n_without_helmet == 0:
+                        if violation_trackers[i]["violation"] == True and violation_trackers[i]["end_time"] == None:
+                           violation_trackers[i]["end_time"] = current_time[i]
+                        elif violation_trackers[i]["violation"] == True and current_time[i] - violation_trackers[i]["end_time"] > timedelta(seconds=10):
+                            violation_trackers[i]["violation"] = False
+                            violation_trackers[i]["Start_time"] = None
+                            violation_trackers[i]["end_time"] = None
+                            data_dict = {}
+                            data_dict["video_id"] = -1
+                            data_dict["inference_engine_id"] = model_id
+                            data_dict["operating_unit_id"] = int("".join(ip_list[i][ip].split(".")))
+                            data_dict["frame_id"] = filename
+                            data_dict["label_id"] = label_dict["NVL"][list(seq_dict["NVL"].keys())[0]]
+                            data_dict["event_processed_time_zone"] = "IST"
+                            data_dict["event_processed_local_time"] = str(current_time[i])
+                            data_dict["event_flag"] = 0
+                            data_dict["created_date"] = str(current_time[i])
+                            data_dict["created_by"] = model_id
+                            data_dict["current_flag"] = current_flag
+                            data_dict["active_flag"] = active_flag
+                            data_dict["delete_flag"] = delete_flag
+                            cv2.imwrite("filename", images[i])
+                            event_log_dtl_writer(engine, data_dict)
+                            # call db log
+
                     bbox = track.to_tlbr()
                     # print(track.track_id,"+",track.label)
                     draw_box_with_id(images[i], bbox, track.track_id, track.label, config['model']['labels'])
@@ -126,10 +200,10 @@ def _main_(args):
                 #     bbox = det.to_tlbr()
                 #     cv2.rectangle(images[i], (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 0, 0), 2)
                 
-                print("CAM "+str(i))
-                print("Persons without helmet = " + str(n_without_helmet))
-                print("Persons with helmet = " + str(n_with_helmet))
-                cv2.imshow('Cam'+str(i), images[i])
+                # print("CAM "+str(i))
+                # print("Persons without helmet = " + str(n_without_helmet))
+                # print("Persons with helmet = " + str(n_with_helmet))
+                # cv2.imshow('Cam'+str(i), images[i])
             images = []
         if cv2.waitKey(1) == 27:
             break  # esc to quit
@@ -139,6 +213,6 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Predict with a trained yolo model')
     argparser.add_argument('-c', '--conf', help='path to configuration file')
     argparser.add_argument('-n', '--count', help='number of cameras')
-
+    argparser.add_argument('-ip', '--ipadress', help='ip address, user, pass of the camera \n example user:password@192.168.1.1\nFor multiple cameras\n user:password@192.168.1.1-user:password@192.168.1.2-.-.-.')
     args = argparser.parse_args()
     _main_(args)
