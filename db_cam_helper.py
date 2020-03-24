@@ -38,7 +38,11 @@ def event_log_dtl_writer(engine, data_dict):
         seq = None
         q = link_to_db.execute(f"SELECT max(seq) from {table_name}")
         if q.rowcount > 0:
-            seq = q.fetchall()[0].values()[0] + 1
+            seq = q.fetchall()[0].values()[0] 
+			if seq == None:
+				seq = 1
+			else:
+				seq += 1
         else:
             seq = 1
         data_dict["seq"] = seq
