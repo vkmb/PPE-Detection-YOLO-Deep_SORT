@@ -194,7 +194,7 @@ def _main_(args):
                         if violation_trackers[i]["violation"] == False:
                             violation_trackers[i]["violation"] = True
                             violation_trackers[i]["Start_time"] = current_time[i]
-                            filename = f"CAM {i} {current_time[i].strftime('%d_%m_%Y_%I_%M_%S_%p')}.jpg"
+                            filename = f"CAM {i} {current_time[i].strftime('%d-%m-%Y %I:%M:%S %p')}.jpg"
                             data_dict = {}
                             data_dict["video_id"] = -1
                             data_dict["inference_engine_id"] = model_id
@@ -220,7 +220,7 @@ def _main_(args):
                             data_dict["current_flag"] = current_flag
                             data_dict["active_flag"] = active_flag
                             data_dict["delete_flag"] = delete_flag
-                            cv2.imwrite("filename", images[i])
+                            cv2.imwrite(filename, images[i])
                             event_log_dtl_writer(engine, data_dict)
                             print("Violation Started and Logged to file {filename}")
                             # call db log
@@ -237,7 +237,7 @@ def _main_(args):
                         ] > timedelta(
                             seconds=10
                         ):
-                            filename = f"CAM {i} {current_time[i].strftime('%d_%m_%Y_%I_%M_%S_%p')}.jpg"
+                            filename = f"CAM {i} {current_time[i].strftime('%d-%m-%Y %I:%M:%S %p')}.jpg"
                             violation_trackers[i]["violation"] = False
                             violation_trackers[i]["Start_time"] = None
                             violation_trackers[i]["end_time"] = None
@@ -266,7 +266,7 @@ def _main_(args):
                             data_dict["current_flag"] = current_flag
                             data_dict["active_flag"] = active_flag
                             data_dict["delete_flag"] = delete_flag
-                            cv2.imwrite("filename", images[i])
+                            cv2.imwrite(filename, images[i])
                             event_log_dtl_writer(engine, data_dict)
                             print("Violation Stopped and Logged to file {filename}")
                             # call db log
