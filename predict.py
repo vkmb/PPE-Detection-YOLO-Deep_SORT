@@ -32,33 +32,49 @@ config = ConfigProto(device_count = {'GPU': 0})
 tf.keras.backend.set_session(tf.Session(config=config))
 
 def _main_(args):
-    ip = False
+    ip, file_src = False, False
+    num_cam = None
+    ip_address, ip_list, file_path = [], [], []
+
     config_path = args.conf
-    num_cam=None
+    
     if args.count != None:
         num_cam = int(args.count)
-    ip_address = args.ipadress.split("-")
-    ip_list = []
+
+    elif args.ipadress != None:
+        ip_address = args.ipadress.split("-")
+        for ip_up in ip_address:
+            dump, ipp = ip_up.split("@")
+            ip, dump2 = ipp.split(":")
+            ip_list.append({"ip":ip})
+            # user_psk, ip = ip_up.split("@")
+            # user, psk = user_psk.split(":")
+            # ip_list.append({"ip": ip,"user": user, "psk": psk})
+
+    elif args.file_path != None:
+        file_path = args.file_path.split("-")
+    
+    else:
+        print("No image sources found")
+        exit()
+
     engine = generate_db_engine(creds)
     label_loader(engine, label_dict, label_template)
     inference_engine_loader(engine, inference_engine_dict, 1)
-    for ip_up in ip_address:
-    #    user_psk, ip = ip_up.split("@")
-    #    user, psk = user_psk.split(":")
-    #    ip_list.append({"ip": ip,"user": user, "psk": psk})
-       dump, ipp = ip_up.split("@")
-       ip, dump2 = ipp.split(":")
-       ip_list.append({"ip":ip})
+    
+    
 
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
 
-    if num_cam == None and len(ip_list) != 0:
+    if num_cam == None and len(ip_list) > 0:
         ip = True
         num_cam = len(ip_list)
-    else:
-        print("No image sources found")
-        exit()
+    elif num_cam == None and len(file_path) > 0:
+        file_src = True
+        num_cam = len(file_path)
+    
+    
     ###############################
     #   Set some parameter
     ###############################
@@ -101,12 +117,14 @@ def _main_(args):
     violation_trackers = []
             
     for i in range(num_cam):
-        if not ip:
-            video_reader = cv2.VideoCapture(i)
-        else:
+        if ip:
             # connection_string = get_camera_stream_uri(ip_list[i]["ip"], user=ip_dict[i]["user"], psk=ip_dict[i]["psk"])
             connection_string = ip_address[i]
             video_reader = cv2.VideoCapture(connection_string)
+        elif file_src:
+            video_reader = cv2.VideoCapture(file_path[i])
+        else:
+            video_reader = cv2.VideoCapture(i)
         video_readers.append(video_reader)
         violation_trackers.append({"violation":False, "start_time":None, "end_time":None})
 
@@ -223,6 +241,7 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Predict with a trained yolo model')
     argparser.add_argument('-c', '--conf', help='path to configuration file')
     argparser.add_argument('-n', '--count', help='number of cameras')
+    argparser.add_argument('-vp', '--file_path', help='list of file paths to video files')
     argparser.add_argument('-ip', '--ipadress', help='ip address, user, pass of the camera \n example user:password@192.168.1.1\nFor multiple cameras\n user:password@192.168.1.1-user:password@192.168.1.2-.-.-.')
     args = argparser.parse_args()
     _main_(args)
