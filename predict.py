@@ -206,6 +206,7 @@ def _main_(args):
                                 data_dict["operating_unit_id"] = ord("v") * 10 + i
                             else:
                                 data_dict["operating_unit_id"] = ord("u") * 10 + i
+                            data_dict["operating_unit_seq"] = data_dict["operating_unit_id"]
                             data_dict["frame_id"] = int(filename)
                             data_dict["label_id"] = list(label_dict["VLO"].keys())[0]
                             data_dict["event_processed_time_zone"] = "IST"
@@ -242,6 +243,7 @@ def _main_(args):
                             data_dict = {}
                             data_dict["video_id"] = -1
                             data_dict["inference_engine_id"] = model_id
+                            
                             if ip:
                                 data_dict["operating_unit_id"] = int(
                                     "".join(srcs[i]["ip"].split("."))
@@ -250,6 +252,7 @@ def _main_(args):
                                 data_dict["operating_unit_id"] = ord("v") * 10 + i
                             else:
                                 data_dict["operating_unit_id"] = ord("u") * 10 + i
+                            data_dict["operating_unit_seq"] = data_dict["operating_unit_id"]
                             data_dict["frame_id"] = int(filename)
                             data_dict["label_id"] = list(label_dict["NVL"].keys())[0]
                             data_dict["event_processed_time_zone"] = "IST"
