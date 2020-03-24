@@ -78,8 +78,14 @@ def inference_engine_loader(engine, inference_engine_dict, status):
 		if q.rowcount > 0 :
 			query = f"UPDATE {table_name} SET current_flag={status}, updated_date={str(datetime.now())}, updated_by={inference_engine_dict['created_by']} WHERE created_by={inference_engine_dict['created_by']}"
 		else :
+			q = link_to_db.execute(f"SELECT max(seq) from {table_name}")
+			if q.rowcount > 0 :
 			# entry not found, so insert
-			seq = 1
+				seq = q.fetchall()[0].values()[0] + 1
+			else:
+				seq = 1
+			inference_engine_dict["seq"] = seq
+			inference_engine_dict["id"] = seq
 			inference_engine_dict["created_date"] = str(datetime.now())
 			query = f"INSERT INTO {table_name} ({','.join(inference_engine_dict.keys())}) VALUES {tuple(inference_engine_dict.values())}"
 		link_to_db.execute(query)
@@ -120,7 +126,7 @@ inference_engine_dict = {
 	"model_weight_format" : ".pb, .h5",
 	"model_config_name" : model_config_name,
 	"model_config_path" : os.path.abspath(model_config_name),
-	"model_preprocess_input_dhape" : "416, 416",
+	"model_preprocess_input_shape" : "416, 416",
 	"model_framework" : "tf",
 	"created_by" : 11,
 	"current_flag" : current_flag, 

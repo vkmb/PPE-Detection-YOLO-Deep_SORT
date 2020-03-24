@@ -27,14 +27,16 @@ warnings.filterwarnings("ignore")
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
 
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
+config = ConfigProto(device_count = {'GPU': 0})
+# config.gpu_options.allow_growth = False
 tf.keras.backend.set_session(tf.Session(config=config))
 
 def _main_(args):
     ip = False
     config_path = args.conf
-    num_cam = int(args.count)
+    num_cam=None
+    if args.count !- None:
+        num_cam = int(args.count)
     ip_address = args.ipadress.split("-")
     ip_list = []
     engine = generate_db_engine(creds)
