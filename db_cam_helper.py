@@ -46,7 +46,6 @@ def event_log_dtl_writer(engine, data_dict):
         else:
             seq = 1
         data_dict["seq"] = seq
-        data_dict["id"] = seq
         insert_query = f"INSERT INTO {table_name} ({','.join(data_dict.keys())}) VALUES {tuple(data_dict.values())}"
         link_to_db.execute(insert_query)
 
