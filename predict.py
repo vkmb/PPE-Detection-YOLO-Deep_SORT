@@ -293,6 +293,8 @@ def _main_(args):
                 print("Persons with helmet = " + str(n_with_helmet))
                 # cv2.imshow('Cam'+str(i), images[i])
             images = []
+        else:
+            break
         if cv2.waitKey(1) == 27:
             break  # esc to quit
     cv2.destroyAllWindows()
