@@ -53,7 +53,7 @@ def _main_(args):
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
 
-    if num_cam == None and len(ip_list) == 0:
+    if num_cam == None and len(ip_list) != 0:
         ip = True
         num_cam = len(ip_list)
     else:
