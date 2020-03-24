@@ -5,6 +5,7 @@ import cv2
 import time
 import copy
 import json
+import warnings
 import argparse
 import numpy as np
 from tqdm import tqdm
@@ -36,13 +37,16 @@ def _main_(args):
     num_cam = int(args.count)
     ip_address = args.ipadress.split("-")
     ip_list = []
-    engine = generate_db_engine()
+    engine = generate_db_engine(creds)
     label_loader(engine, label_dict, label_template)
     inference_engine_loader(engine, inference_engine_dict, 1)
     for ip_up in ip_address:
-       user_psk, ip = ip_up.split("@")
-       user, psk = user_psk.split(":")
-       ip_list.append({"ip": ip,"user": user, "psk": psk})
+    #    user_psk, ip = ip_up.split("@")
+    #    user, psk = user_psk.split(":")
+    #    ip_list.append({"ip": ip,"user": user, "psk": psk})
+       dump, ipp = ip_up.split("@")
+       ip, dump2 = ipp.split(":")
+       ip_list.append({"ip":ip})
 
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
@@ -98,7 +102,8 @@ def _main_(args):
         if not ip:
             video_reader = cv2.VideoCapture(i)
         else:
-            connection_string = get_camera_stream_uri(ip_list[i]["ip"], user=ip_dict[i]["user"], psk=ip_dict[i]["psk"])
+            # connection_string = get_camera_stream_uri(ip_list[i]["ip"], user=ip_dict[i]["user"], psk=ip_dict[i]["psk"])
+            connection_string = ip_address[i]
             video_reader = cv2.VideoCapture(connection_string)
         video_readers.append(video_reader)
         violation_trackers.append({"violation":False, "start_time":None, "end_time":None})
@@ -148,7 +153,7 @@ def _main_(args):
                         if violation_trackers[i]["violation"] == False:
                             violation_trackers[i]["violation"] = True
                             violation_trackers[i]["Start_time"] = current_time[i]
-                            filename = f"CAM {i} {current_time[i].strftime("%d-%m-%Y %I:%M:%S %p")}.jpg"
+                            filename = f"CAM {i} {current_time[i].strftime('%d-%m-%Y %I:%M:%S %p')}.jpg"
                             data_dict = {}
                             data_dict["video_id"] = -1
                             data_dict["inference_engine_id"] = model_id
@@ -170,6 +175,7 @@ def _main_(args):
                         if violation_trackers[i]["violation"] == True and violation_trackers[i]["end_time"] == None:
                            violation_trackers[i]["end_time"] = current_time[i]
                         elif violation_trackers[i]["violation"] == True and current_time[i] - violation_trackers[i]["end_time"] > timedelta(seconds=10):
+                            filename = f"CAM {i} {current_time[i].strftime('%d-%m-%Y %I:%M:%S %p')}.jpg"
                             violation_trackers[i]["violation"] = False
                             violation_trackers[i]["Start_time"] = None
                             violation_trackers[i]["end_time"] = None

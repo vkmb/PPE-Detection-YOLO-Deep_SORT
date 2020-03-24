@@ -1,6 +1,6 @@
 # pip install sqlalchemy psycopg2-binary
 # sudo apt-get install build-dep python-psycopg2
-# pip install --upgrade onvif_zeep
+# pip install --upgrade onvif_zeep sqlalchemy psycopg2-binary
 
 import os
 import sys
@@ -70,7 +70,7 @@ def label_loader(engine, seq_dict, label_template):
 
 def inference_engine_loader(engine, inference_engine_dict, status):
 	table_name = '"CV_Analytics".inference_engine'
-	if engine == None or seq_dict == {}:
+	if engine == None or inference_engine_dict == {}:
 		return None
 	with engine.connect() as link_to_db:
 		seq = None
@@ -82,7 +82,7 @@ def inference_engine_loader(engine, inference_engine_dict, status):
 			seq = 1
 			inference_engine_dict["created_date"] = str(datetime.now())
 			query = f"INSERT INTO {table_name} ({','.join(inference_engine_dict.keys())}) VALUES {tuple(inference_engine_dict.values())}"
-		link_to_db.execute(insert_query)
+		link_to_db.execute(query)
 
 
 def generate_db_engine(creds):
@@ -92,6 +92,7 @@ def generate_db_engine(creds):
 	return engine
 
 model_id, current_flag, active_flag, delete_flag  = 11, 1, 1, 0
+model_config_name = "config.json"
 
 label_template = {
 	"seq" : None, 
@@ -110,14 +111,14 @@ label_dict = {
 }
 
 
-inference_model = {
+inference_engine_dict = {
 	"model_id" : model_id,
 	"model_vrsn_number" : 1,
 	"model_name" : "PPE Detect",
 	"model_path" : os.path.abspath(sys.argv[0]),
 	"backbone_name" : "yolo v3",
 	"model_weight_format" : ".pb, .h5",
-	"model_config_name" : "config.json",
+	"model_config_name" : model_config_name,
 	"model_config_path" : os.path.abspath(model_config_name),
 	"model_preprocess_input_dhape" : "416, 416",
 	"model_framework" : "tf",
