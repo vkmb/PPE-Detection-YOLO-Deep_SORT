@@ -194,7 +194,7 @@ def _main_(args):
                         if violation_trackers[i]["violation"] == False:
                             violation_trackers[i]["violation"] = True
                             violation_trackers[i]["Start_time"] = current_time[i]
-                            filename = f"{i}{current_time[i].strftime('%d%m%Y%H%M%S')}"
+                            filename = f"{i}{current_time[i].strftime('%d%M%H%M')}"
                             data_dict = {}
                             data_dict["video_id"] = -1
                             data_dict["inference_engine_id"] = model_id
@@ -235,7 +235,7 @@ def _main_(args):
                         ] > timedelta(
                             seconds=10
                         ):
-                            filename = f"{i}{current_time[i].strftime('%d%m%Y%H%M%S')}"
+                            filename = f"{i}{current_time[i].strftime('%d%M%H%M')}"
                             violation_trackers[i]["violation"] = False
                             violation_trackers[i]["Start_time"] = None
                             violation_trackers[i]["end_time"] = None
