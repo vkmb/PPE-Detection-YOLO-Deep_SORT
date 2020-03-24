@@ -76,7 +76,7 @@ def inference_engine_loader(engine, inference_engine_dict, status):
 		seq = None
 		q = link_to_db.execute(f"SELECT seq from {table_name} WHERE created_by={inference_engine_dict['created_by']}")
 		if q.rowcount > 0 :
-			query = f"UPDATE {table_name} SET current_flag={status}, updated_date=\"{str(datetime.now())}\", updated_by={inference_engine_dict['created_by']} WHERE created_by={inference_engine_dict['created_by']}"
+			query = f"UPDATE {table_name} SET current_flag={status}, updated_date={datetime.now()}, updated_by={inference_engine_dict['created_by']} WHERE created_by={inference_engine_dict['created_by']}"
 		else :
 			q = link_to_db.execute(f"SELECT max(seq) from {table_name}")
 			if q.rowcount > 0 :
