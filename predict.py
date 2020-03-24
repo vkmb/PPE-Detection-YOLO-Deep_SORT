@@ -197,6 +197,7 @@ def _main_(args):
                             filename = f"{i}{current_time[i].strftime('%d%M%H%M')}"
                             data_dict = {}
                             data_dict["video_id"] = -1
+                            data_dict["video_dtl_seq"] =data_dict["video_id"]
                             data_dict["inference_engine_id"] = model_id
                             if ip:
                                 data_dict["operating_unit_id"] = int(
@@ -267,7 +268,7 @@ def _main_(args):
                             data_dict["current_flag"] = current_flag
                             data_dict["active_flag"] = active_flag
                             data_dict["delete_flag"] = delete_flag
-                            cv2.imwrite(filename+".jpg∂", images[i])
+                            cv2.imwrite(filename+".jpg", images[i])
                             event_log_dtl_writer(engine, data_dict)
                             print("Violation Stopped and Logged to file {filename}")
                             # call db log
