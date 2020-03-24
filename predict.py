@@ -35,7 +35,7 @@ def _main_(args):
     ip = False
     config_path = args.conf
     num_cam=None
-    if args.count !- None:
+    if args.count != None:
         num_cam = int(args.count)
     ip_address = args.ipadress.split("-")
     ip_list = []
