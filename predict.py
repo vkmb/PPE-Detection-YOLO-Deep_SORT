@@ -34,12 +34,13 @@ tf.keras.backend.set_session(tf.Session(config=config))
 def _main_(args):
     ip, file_src = False, False
     num_cam = None
-    ip_address, ip_list, file_path = [], [], []
+    ip_address, ip_list, file_path, srcs = [], [], [], []
 
     config_path = args.conf
     
     if args.count != None:
         num_cam = int(args.count)
+        srcs = [i for i in range(num_cam)]
 
     elif args.ipadress != None:
         ip_address = args.ipadress.split("-")
@@ -47,12 +48,14 @@ def _main_(args):
             dump, ipp = ip_up.split("@")
             ip, dump2 = ipp.split(":")
             ip_list.append({"ip":ip})
+        srcs = ip_list
             # user_psk, ip = ip_up.split("@")
             # user, psk = user_psk.split(":")
             # ip_list.append({"ip": ip,"user": user, "psk": psk})
 
     elif args.file_path != None:
         file_path = args.file_path.split("-")
+        srcs = file_path
     
     else:
         print("No image sources found")
@@ -115,16 +118,22 @@ def _main_(args):
     # if 'webcam' in input_path:  # do detection on the first webcam
     video_readers = []
     violation_trackers = []
+    
             
-    for i in range(num_cam):
-        if ip:
-            # connection_string = get_camera_stream_uri(ip_list[i]["ip"], user=ip_dict[i]["user"], psk=ip_dict[i]["psk"])
-            connection_string = ip_address[i]
-            video_reader = cv2.VideoCapture(connection_string)
-        elif file_src:
-            video_reader = cv2.VideoCapture(file_path[i])
-        else:
-            video_reader = cv2.VideoCapture(i)
+    # for i in range(num_cam):
+    #     if ip:
+    #         # connection_string = get_camera_stream_uri(ip_list[i]["ip"], user=ip_dict[i]["user"], psk=ip_dict[i]["psk"])
+    #         connection_string = ip_address[i]
+    #         video_reader = cv2.VideoCapture(connection_string)
+    #     elif file_src:
+    #         video_reader = cv2.VideoCapture(file_path[i])
+    #     else:
+    #         video_reader = cv2.VideoCapture(i)
+    #     video_readers.append(video_reader)
+    #     violation_trackers.append({"violation":False, "start_time":None, "end_time":None})
+
+    for src in srcs:
+        video_reader = cv2.VideoCapture(src)
         video_readers.append(video_reader)
         violation_trackers.append({"violation":False, "start_time":None, "end_time":None})
 
@@ -177,7 +186,12 @@ def _main_(args):
                             data_dict = {}
                             data_dict["video_id"] = -1
                             data_dict["inference_engine_id"] = model_id
-                            data_dict["operating_unit_id"] = int("".join(ip_list[i]['ip'].split(".")))
+                            if ip:
+                                data_dict["operating_unit_id"] = int("".join(ip_list[i]['ip'].split(".")))
+                            elif file_src:
+                                data_dict["operating_unit_id"] = ord("v")*10+i
+                            else:
+                                data_dict["operating_unit_id"] = ord("u")*10+i
                             data_dict["frame_id"] = filename
                             data_dict["label_id"] = label_dict["VLO"][list(label_dict["VLO"].keys())[0]]
                             data_dict["event_processed_time_zone"] = "IST"
@@ -203,7 +217,12 @@ def _main_(args):
                             data_dict = {}
                             data_dict["video_id"] = -1
                             data_dict["inference_engine_id"] = model_id
-                            data_dict["operating_unit_id"] = int("".join(ip_list[i]['ip'].split(".")))
+                            if ip:
+                                data_dict["operating_unit_id"] = int("".join(srcs[i]['ip'].split(".")))
+                            elif file_src:
+                                data_dict["operating_unit_id"] = ord("v")*10+i
+                            else:
+                                data_dict["operating_unit_id"] = ord("u")*10+i
                             data_dict["frame_id"] = filename
                             data_dict["label_id"] = label_dict["NVL"][list(label_dict["NVL"].keys())[0]]
                             data_dict["event_processed_time_zone"] = "IST"
@@ -228,10 +247,10 @@ def _main_(args):
                 #     bbox = det.to_tlbr()
                 #     cv2.rectangle(images[i], (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 0, 0), 2)
                 
-                # print("CAM "+str(i))
+                print("CAM "+str(i))
                 print("Persons without helmet = " + str(n_without_helmet))
                 print("Persons with helmet = " + str(n_with_helmet))
-                cv2.imshow('Cam'+str(i), images[i])
+                # cv2.imshow('Cam'+str(i), images[i])
             images = []
         if cv2.waitKey(1) == 27:
             break  # esc to quit
