@@ -209,6 +209,7 @@ def _main_(args):
                             data_dict["operating_unit_seq"] = data_dict["operating_unit_id"]
                             data_dict["frame_id"] = int(filename)
                             data_dict["label_id"] = list(label_dict["VLO"].keys())[0]
+                            data_dict["label_seq"] = data_dict["label_id"]
                             data_dict["event_processed_time_zone"] = "IST"
                             data_dict["event_processed_local_time"] = str(
                                 current_time[i]
@@ -255,6 +256,7 @@ def _main_(args):
                             data_dict["operating_unit_seq"] = data_dict["operating_unit_id"]
                             data_dict["frame_id"] = int(filename)
                             data_dict["label_id"] = list(label_dict["NVL"].keys())[0]
+                            data_dict["label_seq"] = data_dict["label_id"]
                             data_dict["event_processed_time_zone"] = "IST"
                             data_dict["event_processed_local_time"] = str(
                                 current_time[i]
