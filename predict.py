@@ -207,9 +207,7 @@ def _main_(args):
                             else:
                                 data_dict["operating_unit_id"] = ord("u") * 10 + i
                             data_dict["frame_id"] = int(filename)
-                            data_dict["label_id"] = label_dict["VLO"][
-                                list(label_dict["VLO"].keys())[0]
-                            ]
+                            data_dict["label_id"] = list(label_dict["VLO"].keys())[0]
                             data_dict["event_processed_time_zone"] = "IST"
                             data_dict["event_processed_local_time"] = str(
                                 current_time[i]
@@ -253,9 +251,7 @@ def _main_(args):
                             else:
                                 data_dict["operating_unit_id"] = ord("u") * 10 + i
                             data_dict["frame_id"] = int(filename)
-                            data_dict["label_id"] = label_dict["NVL"][
-                                list(label_dict["NVL"].keys())[0]
-                            ]
+                            data_dict["label_id"] = list(label_dict["NVL"].keys())[0]
                             data_dict["event_processed_time_zone"] = "IST"
                             data_dict["event_processed_local_time"] = str(
                                 current_time[i]
