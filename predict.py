@@ -159,9 +159,9 @@ def _main_(args):
                             data_dict = {}
                             data_dict["video_id"] = -1
                             data_dict["inference_engine_id"] = model_id
-                            data_dict["operating_unit_id"] = int("".join(ip_list[i][ip].split(".")))
+                            data_dict["operating_unit_id"] = int("".join(ip_list[i]['ip'].split(".")))
                             data_dict["frame_id"] = filename
-                            data_dict["label_id"] = label_dict["VLO"][list(seq_dict["VLO"].keys())[0]]
+                            data_dict["label_id"] = label_dict["VLO"][list(label_dict["VLO"].keys())[0]]
                             data_dict["event_processed_time_zone"] = "IST"
                             data_dict["event_processed_local_time"] = str(current_time[i])
                             data_dict["event_flag"] = 1
@@ -172,6 +172,7 @@ def _main_(args):
                             data_dict["delete_flag"] = delete_flag
                             cv2.imwrite("filename", images[i])
                             event_log_dtl_writer(engine, data_dict)
+                            print("Violation Started and Logged to file {filename}")
                             # call db log
                     if n_without_helmet == 0:
                         if violation_trackers[i]["violation"] == True and violation_trackers[i]["end_time"] == None:
@@ -184,9 +185,9 @@ def _main_(args):
                             data_dict = {}
                             data_dict["video_id"] = -1
                             data_dict["inference_engine_id"] = model_id
-                            data_dict["operating_unit_id"] = int("".join(ip_list[i][ip].split(".")))
+                            data_dict["operating_unit_id"] = int("".join(ip_list[i]['ip'].split(".")))
                             data_dict["frame_id"] = filename
-                            data_dict["label_id"] = label_dict["NVL"][list(seq_dict["NVL"].keys())[0]]
+                            data_dict["label_id"] = label_dict["NVL"][list(label_dict["NVL"].keys())[0]]
                             data_dict["event_processed_time_zone"] = "IST"
                             data_dict["event_processed_local_time"] = str(current_time[i])
                             data_dict["event_flag"] = 0
@@ -197,6 +198,7 @@ def _main_(args):
                             data_dict["delete_flag"] = delete_flag
                             cv2.imwrite("filename", images[i])
                             event_log_dtl_writer(engine, data_dict)
+                            print("Violation Stopped and Logged to file {filename}")
                             # call db log
 
                     bbox = track.to_tlbr()
@@ -209,9 +211,9 @@ def _main_(args):
                 #     cv2.rectangle(images[i], (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 0, 0), 2)
                 
                 # print("CAM "+str(i))
-                # print("Persons without helmet = " + str(n_without_helmet))
-                # print("Persons with helmet = " + str(n_with_helmet))
-                # cv2.imshow('Cam'+str(i), images[i])
+                print("Persons without helmet = " + str(n_without_helmet))
+                print("Persons with helmet = " + str(n_with_helmet))
+                cv2.imshow('Cam'+str(i), images[i])
             images = []
         if cv2.waitKey(1) == 27:
             break  # esc to quit
